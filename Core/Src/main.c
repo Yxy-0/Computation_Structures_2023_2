@@ -17,12 +17,11 @@
   */
 /* USER CODE END Header */
 /* Includes ------------------------------------------------------------------*/
-#include "main.h"
-
+#include "main.h" /*biblioteca*/
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
-#include "stdio.h"
+#include "stdio.h"  /*biblioteca*/
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -42,6 +41,7 @@
 
 /* Private variables ---------------------------------------------------------*/
 UART_HandleTypeDef huart2;
+DMA_HandleTypeDef hdma_usart2_rx;
 
 /* USER CODE BEGIN PV */
 
@@ -50,6 +50,7 @@ UART_HandleTypeDef huart2;
 /* Private function prototypes -----------------------------------------------*/
 void SystemClock_Config(void);
 static void MX_GPIO_Init(void);
+static void MX_DMA_Init(void);
 static void MX_USART2_UART_Init(void);
 /* USER CODE BEGIN PFP */
 
@@ -57,11 +58,25 @@ static void MX_USART2_UART_Init(void);
 
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
-int _write(int file, char *ptr, int len)
+/*int _write(int file, char *ptr, int len)
 {
 	HAL_UART_Transmit(&huart2,(uint8_t*)ptr ,len, 10);
 	return len;
+}*/
+
+
+uint8_t Rx_data[10];
+
+/*void HAL_UART_RxHalfCpltCallback(UART_HandleyTypeDef *huart)
+{
+	HAL_GPIO_TogglePin(GPIOA, GPIO_PIN_0); //Toggle PA0
 }
+
+void HAL_UART_RxCpltCallback(UART_HandleyTypeDef *huart)
+{
+	// HAL_UART_Receive_IT(&huart2, Rx_data, 4); //restablecer el modo de recepción de interrupción
+	HAL_UART_Receive_DMA (&huart2, Rx_data, 4);
+}*/  //Tuve errores al configurar el Rx_data[10] al watch1 por lo que me manda error al poner estos
 /* USER CODE END 0 */
 
 /**
@@ -92,6 +107,7 @@ int main(void)
 
   /* Initialize all configured peripherals */
   MX_GPIO_Init();
+  MX_DMA_Init();
   MX_USART2_UART_Init();
   /* USER CODE BEGIN 2 */
 
@@ -100,12 +116,20 @@ int main(void)
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
  // printf("Hello World! /r/n");
- for(uint8_t idx = 0; idx <0x0F;idx++)
-	  printf("IDX: 0x%02X\r\n",idx);
-  while (1)
-  {
-    /* USER CODE END WHILE */
+  /*for(uint8_t idx = 0; idx <0x0F;idx++)
+	  printf("IDX: 0x%02X\r\n",idx);*/
+ // HAL_UART_Receive_IT(&huart2, Rx_data, 4);
 
+  HAL_UART_Receive_DMA (&huart2, Rx_data, 4);
+
+ while (1)
+  {
+
+    /* USER CODE END WHILE */
+	 HAL_UART_Receive (&huart2, Rx_data, 4, 1000);
+
+	 HAL_GPIO_TogglePin (GPIOA, GPIO_PIN_5);
+	 HAL_Delay (250);
     /* USER CODE BEGIN 3 */
   }
   /* USER CODE END 3 */
@@ -176,7 +200,7 @@ static void MX_USART2_UART_Init(void)
 
   /* USER CODE END USART2_Init 1 */
   huart2.Instance = USART2;
-  huart2.Init.BaudRate = 921600;
+  huart2.Init.BaudRate = 115200;
   huart2.Init.WordLength = UART_WORDLENGTH_8B;
   huart2.Init.StopBits = UART_STOPBITS_1;
   huart2.Init.Parity = UART_PARITY_NONE;
@@ -196,6 +220,22 @@ static void MX_USART2_UART_Init(void)
 }
 
 /**
+  * Enable DMA controller clock
+  */
+static void MX_DMA_Init(void)
+{
+
+  /* DMA controller clock enable */
+  __HAL_RCC_DMA1_CLK_ENABLE();
+
+  /* DMA interrupt init */
+  /* DMA1_Channel6_IRQn interrupt configuration */
+  HAL_NVIC_SetPriority(DMA1_Channel6_IRQn, 0, 0);
+  HAL_NVIC_EnableIRQ(DMA1_Channel6_IRQn);
+
+}
+
+/**
   * @brief GPIO Initialization Function
   * @param None
   * @retval None
@@ -207,24 +247,18 @@ static void MX_GPIO_Init(void)
 /* USER CODE END MX_GPIO_Init_1 */
 
   /* GPIO Ports Clock Enable */
-  __HAL_RCC_GPIOC_CLK_ENABLE();
+  __HAL_RCC_GPIOH_CLK_ENABLE();
   __HAL_RCC_GPIOA_CLK_ENABLE();
 
-  /*Configure GPIO pin : USER_BUTTON_Pin */
-  GPIO_InitStruct.Pin = USER_BUTTON_Pin;
-  GPIO_InitStruct.Mode = GPIO_MODE_IT_RISING;
-  GPIO_InitStruct.Pull = GPIO_NOPULL;
-  HAL_GPIO_Init(USER_BUTTON_GPIO_Port, &GPIO_InitStruct);
+  /*Configure GPIO pin Output Level */
+  HAL_GPIO_WritePin(GPIOA, GPIO_PIN_0|GPIO_PIN_5, GPIO_PIN_RESET);
 
-  /*Configure GPIO pin : GREEN_LED_Pin */
-  GPIO_InitStruct.Pin = GREEN_LED_Pin;
-  GPIO_InitStruct.Mode = GPIO_MODE_IT_RISING;
+  /*Configure GPIO pins : PA0 PA5 */
+  GPIO_InitStruct.Pin = GPIO_PIN_0|GPIO_PIN_5;
+  GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
-  HAL_GPIO_Init(GREEN_LED_GPIO_Port, &GPIO_InitStruct);
-
-  /* EXTI interrupt init*/
-  HAL_NVIC_SetPriority(EXTI15_10_IRQn, 0, 0);
-  HAL_NVIC_EnableIRQ(EXTI15_10_IRQn);
+  GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
+  HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
 
 /* USER CODE BEGIN MX_GPIO_Init_2 */
 /* USER CODE END MX_GPIO_Init_2 */
