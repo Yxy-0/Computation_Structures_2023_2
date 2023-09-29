@@ -17,11 +17,10 @@
   */
 /* USER CODE END Header */
 /* Includes ------------------------------------------------------------------*/
-#include "main.h" /*biblioteca*/
+#include "main.h"
 
 /* Private includes ----------------------------------------------------------*/
-/* USER CODE BEGIN Includes */
-#include "stdio.h"  /*biblioteca*/
+/* USER CODE BEGIN Includes
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -49,87 +48,120 @@ DMA_HandleTypeDef hdma_usart2_rx;
 
 /* Private function prototypes -----------------------------------------------*/
 void SystemClock_Config(void);
+
 static void MX_GPIO_Init(void);
+
 static void MX_DMA_Init(void);
+
 static void MX_USART2_UART_Init(void);
+
 /* USER CODE BEGIN PFP */
+
+
 
 /* USER CODE END PFP */
 
-/* Private user code ---------------------------------------------------------*/
-/* USER CODE BEGIN 0 */
-/*int _write(int file, char *ptr, int len)
-{
-	HAL_UART_Transmit(&huart2,(uint8_t*)ptr ,len, 10);
-	return len;
-}*/
 
+
+/* Private user code ---------------------------------------------------------*/
+
+/* USER CODE BEGIN 0 */
+
+
+
+int _write(int file,char *ptr, int len)
+
+{
+
+	HAL_UART_Transmit(&huart2, (uint8_t*)ptr, len, 10);
+
+	return len;
+
+}
+
+/* USER CODE END 0 */
 
 uint8_t Rx_data[10];
 
-/*void HAL_UART_RxHalfCpltCallback(UART_HandleyTypeDef *huart)
+void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart)
+
 {
-	HAL_GPIO_TogglePin(GPIOA, GPIO_PIN_0); //Toggle PA0
+
+	HAL_GPIO_TogglePin (GPIOA,GPIO_PIN_5);
+
+	HAL_UART_Receive_IT(&huart2, Rx_data, 4);//restart the interrupt reception mode
+
 }
 
-void HAL_UART_RxCpltCallback(UART_HandleyTypeDef *huart)
-{
-	// HAL_UART_Receive_IT(&huart2, Rx_data, 4); //restablecer el modo de recepción de interrupción
-	HAL_UART_Receive_DMA (&huart2, Rx_data, 4);
-}*/  //Tuve errores al configurar el Rx_data[10] al watch1 por lo que me manda error al poner estos
-/* USER CODE END 0 */
-
 /**
+
   * @brief  The application entry point.
+
   * @retval int
+
   */
+
 int main(void)
+
 {
+
   /* USER CODE BEGIN 1 */
+
+
 
   /* USER CODE END 1 */
 
+
+
   /* MCU Configuration--------------------------------------------------------*/
 
+
+
   /* Reset of all peripherals, Initializes the Flash interface and the Systick. */
+
   HAL_Init();
+
+
 
   /* USER CODE BEGIN Init */
 
+
+
   /* USER CODE END Init */
 
+
+
   /* Configure the system clock */
+
   SystemClock_Config();
+
+
 
   /* USER CODE BEGIN SysInit */
 
+
+
   /* USER CODE END SysInit */
 
+
+
   /* Initialize all configured peripherals */
+
   MX_GPIO_Init();
+
   MX_DMA_Init();
+
   MX_USART2_UART_Init();
+
   /* USER CODE BEGIN 2 */
 
-  /* USER CODE END 2 */
-
+  HAL_UART_Receive_IT(&huart2, Rx_data, 4);
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
- // printf("Hello World! /r/n");
-  /*for(uint8_t idx = 0; idx <0x0F;idx++)
-	  printf("IDX: 0x%02X\r\n",idx);*/
- // HAL_UART_Receive_IT(&huart2, Rx_data, 4);
-
-  HAL_UART_Receive_DMA (&huart2, Rx_data, 4);
-
- while (1)
+  while (1)
   {
-
     /* USER CODE END WHILE */
-	 HAL_UART_Receive (&huart2, Rx_data, 4, 1000);
 
-	 HAL_GPIO_TogglePin (GPIOA, GPIO_PIN_5);
-	 HAL_Delay (250);
     /* USER CODE BEGIN 3 */
   }
   /* USER CODE END 3 */
@@ -200,7 +232,7 @@ static void MX_USART2_UART_Init(void)
 
   /* USER CODE END USART2_Init 1 */
   huart2.Instance = USART2;
-  huart2.Init.BaudRate = 115200;
+  huart2.Init.BaudRate = 921600;
   huart2.Init.WordLength = UART_WORDLENGTH_8B;
   huart2.Init.StopBits = UART_STOPBITS_1;
   huart2.Init.Parity = UART_PARITY_NONE;
